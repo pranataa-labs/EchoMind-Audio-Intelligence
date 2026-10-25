@@ -1,9 +1,12 @@
-"""EchoMind - End-to-End Meeting & Audio Intelligence Platform UI."""
+"""EchoMind - End-to-End Meeting & Audio Intelligence Platform.
+Designed with Pranataa's Shadcn-Admin Design System (Slate palette, Inter, 0.625rem radius).
+"""
 
 import os
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+
 from echomind.config import DEFAULT_WHISPER_MODEL, GEMINI_API_KEY, SAMPLES_DIR
 from echomind.audio import AudioProcessor
 from echomind.stt import AudioTranscriber
@@ -12,137 +15,305 @@ from echomind.utils import format_timestamp, action_items_to_dataframe, export_r
 
 # Page configuration
 st.set_page_config(
-    page_title="EchoMind - Audio Intelligence",
+    page_title="EchoMind | Audio Intelligence",
     page_icon="🎙️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Custom Styling (Shadcn Slate Aesthetic)
-CUSTOM_CSS = """
+# Custom Styling (Shadcn-Admin Slate Design System)
+SHADCN_SLATE_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
+:root {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --background: #ffffff;
+    --foreground: #020817;
+    --card: #ffffff;
+    --card-foreground: #020817;
+    --popover: #ffffff;
+    --popover-foreground: #020817;
+    --primary: #0f172a;
+    --primary-foreground: #f8fafc;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f8fafc;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+    --destructive: #ef4444;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #94a3b8;
+    --radius: 0.625rem;
 }
 
-/* Metric Cards */
-.metric-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.625rem;
-    padding: 1.25rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-    margin-bottom: 1rem;
-}
-.metric-title {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    margin-bottom: 0.25rem;
-}
-.metric-value {
-    font-size: 1.75rem;
-    font-weight: 700;
+html, body, [class*="css"] {
+    font-family: var(--font-sans) !important;
     color: #0f172a;
 }
-.metric-sub {
+
+/* Header styling */
+.header-wrapper {
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.header-breadcrumb {
     font-size: 0.8125rem;
-    color: #94a3b8;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+.header-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.2;
+}
+.header-subtitle {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
     margin-top: 0.25rem;
 }
 
-/* Speaker Badge & Pills */
+/* KPI Metric Cards (Satnaing / Shadcn-Admin Pattern) */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 900px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 600px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kpi-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.25rem 1rem 1.25rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    transition: border-color 0.15s ease;
+}
+.kpi-card:hover {
+    border-color: #cbd5e1;
+}
+.kpi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.5rem;
+}
+.kpi-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+}
+.kpi-icon {
+    color: #94a3b8;
+    width: 1rem;
+    height: 1rem;
+}
+.kpi-value {
+    font-size: 1.625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    line-height: 1.2;
+}
+.kpi-desc {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.35rem;
+}
+
+/* Audio Preview Box */
+.audio-card {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.audio-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    flex-wrap: wrap;
+}
+.audio-meta-item strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* Transcript Dialog Rows */
+.transcript-item {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.625rem;
+    transition: background-color 0.1s ease;
+}
+.transcript-item:hover {
+    background-color: #f8fafc;
+}
+.transcript-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+}
 .speaker-pill {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
     font-size: 0.75rem;
     font-weight: 600;
     border-radius: 9999px;
-    margin-right: 0.5rem;
+    letter-spacing: 0.02em;
 }
 .speaker-1 {
-    background-color: #e0e7ff;
-    color: #4338ca;
+    background: #f1f5f9;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
 }
 .speaker-2 {
-    background-color: #fce7f3;
-    color: #be185d;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
 }
 .speaker-3 {
-    background-color: #dcfce7;
+    background: #f0fdf4;
     color: #15803d;
+    border: 1px solid #bbf7d0;
 }
-
-/* Transcript Row */
-.transcript-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.625rem;
-    padding: 0.875rem 1.125rem;
-    margin-bottom: 0.625rem;
-}
-.timestamp-tag {
+.timestamp-pill {
     font-size: 0.75rem;
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     color: #64748b;
-    margin-left: 0.5rem;
+    background: #f1f5f9;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.375rem;
+}
+.transcript-text {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: #1e293b;
 }
 
-/* Badges for priority */
-.badge-high {
-    background: #ffe4e6;
-    color: #e11d48;
-    padding: 0.2rem 0.5rem;
+/* Priority Badges (Outline Badge + Subtle Tint) */
+.badge-priority-high {
+    display: inline-block;
+    background: rgba(244, 63, 94, 0.08);
+    color: #be123c;
+    border: 1px solid rgba(244, 63, 94, 0.25);
     border-radius: 0.375rem;
-    font-weight: 600;
+    padding: 0.125rem 0.5rem;
     font-size: 0.75rem;
+    font-weight: 600;
 }
-.badge-medium {
-    background: #fef3c7;
-    color: #d97706;
-    padding: 0.2rem 0.5rem;
+.badge-priority-medium {
+    display: inline-block;
+    background: rgba(245, 158, 11, 0.08);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.25);
     border-radius: 0.375rem;
-    font-weight: 600;
+    padding: 0.125rem 0.5rem;
     font-size: 0.75rem;
+    font-weight: 600;
 }
-.badge-low {
-    background: #dcfce7;
-    color: #16a34a;
-    padding: 0.2rem 0.5rem;
+.badge-priority-low {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.08);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.25);
     border-radius: 0.375rem;
-    font-weight: 600;
+    padding: 0.125rem 0.5rem;
     font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Clean Button Styling */
+div.stButton > button {
+    border-radius: 0.5rem !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.15s ease !important;
+}
+div.stButton > button:hover {
+    border-color: #94a3b8 !important;
+}
+
+/* Tab Headers */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.stTabs [data-baseweb="tab"] {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+.stTabs [aria-selected="true"] {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #0f172a !important;
 }
 </style>
 """
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+st.markdown(SHADCN_SLATE_CSS, unsafe_allow_html=True)
 
-# Session State Initialization
+# Session State Keys Initialization
+if "audio_path" not in st.session_state:
+    st.session_state.audio_path = None
+if "current_file_signature" not in st.session_state:
+    st.session_state.current_file_signature = None
+if "audio_info" not in st.session_state:
+    st.session_state.audio_info = None
 if "transcript_result" not in st.session_state:
     st.session_state.transcript_result = None
 if "meeting_insight" not in st.session_state:
     st.session_state.meeting_insight = None
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-if "audio_path" not in st.session_state:
-    st.session_state.audio_path = None
 
 # Sidebar Configuration
 with st.sidebar:
-    st.title("🎙️ EchoMind")
-    st.caption("Meeting & Audio Intelligence")
-    st.divider()
+    st.markdown("### 🎙️ **EchoMind**")
+    st.caption("Meeting & Conversation Intelligence")
+    st.markdown("---")
 
-    st.subheader("⚙️ Konfigurasi Model")
+    st.markdown("#### ⚙️ Pengaturan Engine")
+    
     model_size = st.selectbox(
         "Whisper STT Model",
         ["tiny", "base", "small", "medium"],
-        index=1,
-        help="Model 'base' seimbang antara kecepatan dan akurasi di CPU. Gunakan 'tiny' untuk kecepatan maksimal."
+        index=0,  # Default to 'tiny' for blazing fast CPU inference (<3s)
+        help="'tiny': Sangat cepat (~2s, akurasi baik). 'base': Seimbang. 'small': Akurasi lebih tinggi."
     )
     
     num_speakers = st.slider("Estimasi Jumlah Pembicara", min_value=1, max_value=4, value=2)
@@ -154,71 +325,115 @@ with st.sidebar:
         index=0
     )
 
-    st.divider()
-    st.subheader("🔑 Multimodal Reasoning")
+    st.markdown("---")
+    st.markdown("#### 🔑 Multimodal Reasoning")
     api_key_input = st.text_input(
         "Google Gemini API Key",
         value=GEMINI_API_KEY,
         type="password",
-        help="Dapatkan gratis di aistudio.google.com. Jika kosong, EchoMind menggunakan Offline Heuristic Engine."
+        help="Opsional. Jika kosong, sistem otomatis beralih ke Offline Heuristic Engine."
     )
 
     if api_key_input:
         st.success("🟢 Gemini 2.5 Flash Aktif", icon="✅")
     else:
-        st.info("⚪ Mode Offline Heuristik Aktif", icon="ℹ️")
+        st.info("⚪ Offline Heuristic Engine Aktif", icon="ℹ️")
 
-    st.divider()
-    st.caption("Dibuat untuk Pranataa Lab • Machine Learning")
+    st.markdown("---")
+    st.caption("Pranataa Lab • Machine Learning v1.0.0")
 
-# Main Content Header
-col_header, col_sample = st.columns([4, 1.2])
-with col_header:
-    st.markdown("## 🎙️ **EchoMind** Platform")
-    st.write("Transkripsi percakapan super cepat, ekstraksi action items otomatis, dan analisis rapat berbasis AI.")
+# Header Section
+st.markdown("""
+<div class="header-wrapper">
+    <div class="header-breadcrumb">
+        <span>pranataa-lab</span>
+        <span>/</span>
+        <span>machine-learning</span>
+        <span>/</span>
+        <span style="color: #0f172a; font-weight: 600;">echomind</span>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+            <h1 class="header-title">EchoMind Audio Intelligence</h1>
+            <p class="header-subtitle">Transkripsi percakapan super cepat, deteksi pembicara, dan ekstraksi action items otomatis.</p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Top Action Toolbar (Upload & Demo Sample)
+col_upload, col_demo = st.columns([3.2, 1.3])
 
 sample_audio_file = SAMPLES_DIR / "sample_meeting.wav"
-with col_sample:
+
+with col_demo:
+    st.markdown("<div style='height: 1.6rem;'></div>", unsafe_allow_html=True)
     if sample_audio_file.exists():
-        if st.button("▶️ Pakai Sample Audio Demo", use_container_width=True):
+        if st.button("▶️ Gunakan Sample Demo", use_container_width=True):
             st.session_state.audio_path = str(sample_audio_file)
+            st.session_state.current_file_signature = "sample_meeting_demo"
+            st.session_state.audio_info = AudioProcessor.get_audio_info(str(sample_audio_file))
             st.session_state.transcript_result = None
             st.session_state.meeting_insight = None
             st.session_state.chat_history = []
             st.rerun()
 
-# Audio Upload Section
-uploaded_file = st.file_uploader(
-    "Unggah rekaman audio pertemuan (.mp3, .wav, .m4a, .ogg)",
-    type=["mp3", "wav", "m4a", "ogg", "flac"]
-)
+with col_upload:
+    uploaded_file = st.file_uploader(
+        "Pilih file audio rapat (.mp3, .wav, .m4a, .ogg, .flac)",
+        type=["mp3", "wav", "m4a", "ogg", "flac"]
+    )
 
+# Robust Upload Handler (Avoids resetting on rerun)
 if uploaded_file is not None:
-    # Save to temp
-    suffix = Path(uploaded_file.name).suffix or ".wav"
-    temp_path = AudioProcessor.save_upload_to_temp(uploaded_file, suffix=suffix)
-    if st.session_state.audio_path != temp_path:
+    file_sig = f"{uploaded_file.name}_{uploaded_file.size}"
+    if st.session_state.current_file_signature != file_sig:
+        suffix = Path(uploaded_file.name).suffix or ".wav"
+        temp_path = AudioProcessor.save_upload_to_temp(uploaded_file, file_sig, suffix=suffix)
         st.session_state.audio_path = temp_path
+        st.session_state.current_file_signature = file_sig
+        st.session_state.audio_info = AudioProcessor.get_audio_info(temp_path)
         st.session_state.transcript_result = None
         st.session_state.meeting_insight = None
         st.session_state.chat_history = []
+        st.rerun()
 
-# If Audio is Ready
-if st.session_state.audio_path:
+# Audio Preview and Execution Trigger
+if st.session_state.audio_path and os.path.exists(st.session_state.audio_path):
+    info = st.session_state.audio_info or AudioProcessor.get_audio_info(st.session_state.audio_path)
+    file_name = Path(st.session_state.audio_path).name
+
+    st.markdown(f"""
+    <div class="audio-card">
+        <div class="audio-meta-row">
+            <span class="audio-meta-item">📁 File: <strong>{file_name}</strong></span>
+            <span class="audio-meta-item">⏱️ Durasi: <strong>{format_timestamp(info.get('duration', 0.0))}</strong> ({info.get('duration', 0.0)}s)</span>
+            <span class="audio-meta-item">📦 Ukuran: <strong>{info.get('size_mb', 0.0)} MB</strong></span>
+            <span class="audio-meta-item">🔊 Sample Rate: <strong>{info.get('sample_rate', 16000)} Hz</strong></span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Audio player
     st.audio(st.session_state.audio_path)
-    
-    # Process Button
-    if st.session_state.transcript_result is None:
-        if st.button("🚀 Mulai Transkripsi & Analisis Cerdas", type="primary"):
-            progress_bar = st.progress(0.0)
-            status_text = st.empty()
 
-            def update_progress(pct: float, msg: str):
-                progress_bar.progress(pct)
-                status_text.text(msg)
+    # Trigger Process Button
+    btn_col1, btn_col2 = st.columns([1.5, 3])
+    with btn_col1:
+        start_process = st.button("⚡ Proses Transkripsi & Analisis", type="primary", use_container_width=True)
 
-            # Step 1: STT
+    if start_process:
+        progress_placeholder = st.empty()
+        status_box = st.empty()
+
+        def update_progress(pct: float, msg: str):
+            progress_placeholder.progress(pct)
+            status_box.caption(f"⏳ {msg}")
+
+        try:
+            update_progress(0.1, "Memuat engine Whisper STT...")
             transcriber = AudioTranscriber(model_size=model_size, device="cpu", compute_type="int8")
+            
             transcript_res = transcriber.transcribe(
                 st.session_state.audio_path,
                 language=language_choice,
@@ -227,126 +442,174 @@ if st.session_state.audio_path:
             )
             st.session_state.transcript_result = transcript_res
 
-            # Step 2: Intelligence Analysis
-            status_text.text("Menjalankan analisis meeting intelligence...")
+            update_progress(0.85, "Mengekstrak Action Items, Ringkasan & Sentimen...")
             analyzer = MeetingAnalyzer(api_key=api_key_input)
             insight = analyzer.analyze_meeting(transcript_res.full_text)
             st.session_state.meeting_insight = insight
 
-            status_text.empty()
-            progress_bar.empty()
+            update_progress(1.0, "Proses selesai!")
+            progress_placeholder.empty()
+            status_box.empty()
+            st.toast("Transkripsi dan analisis selesai!", icon="✅")
             st.rerun()
 
-# Display Results if Available
+        except Exception as e:
+            progress_placeholder.empty()
+            status_box.empty()
+            st.error(f"Terjadi kesalahan saat memproses audio: {e}")
+
+# Display Intelligence Results
 if st.session_state.transcript_result and st.session_state.meeting_insight:
     res = st.session_state.transcript_result
     insight = st.session_state.meeting_insight
 
-    st.divider()
+    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
-    # KPI Metrics
-    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-    with kpi1:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Durasi Audio</div>
-            <div class="metric-value">{format_timestamp(res.duration_seconds)}</div>
-            <div class="metric-sub">{res.duration_seconds:.1f} detik total</div>
+    # KPI Metrics Section (Shadcn-Admin 4-Card Layout)
+    total_words = sum(len(seg.text.split()) for seg in res.segments)
+    
+    st.markdown(f"""
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Durasi Rekaman</span>
+                <span>⏱️</span>
+            </div>
+            <div class="kpi-value">{format_timestamp(res.duration_seconds)}</div>
+            <div class="kpi-desc">{res.duration_seconds:.1f} detik waktu percakapan</div>
         </div>
-        """, unsafe_allow_html=True)
-    with kpi2:
-        words = sum(len(seg.text.split()) for seg in res.segments)
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Jumlah Kata</div>
-            <div class="metric-value">{words}</div>
-            <div class="metric-sub">{len(res.segments)} segmen tuturan</div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Total Kata</span>
+                <span>📝</span>
+            </div>
+            <div class="kpi-value">{total_words}</div>
+            <div class="kpi-desc">{len(res.segments)} giliran bicara terdeteksi</div>
         </div>
-        """, unsafe_allow_html=True)
-    with kpi3:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Bahasa Terdeteksi</div>
-            <div class="metric-value">{res.language.upper()}</div>
-            <div class="metric-sub">Confidence: {res.language_probability:.0%}</div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Bahasa Utama</span>
+                <span>🌐</span>
+            </div>
+            <div class="kpi-value">{res.language.upper()}</div>
+            <div class="kpi-desc">Confidence score: {res.language_probability:.0%}</div>
         </div>
-        """, unsafe_allow_html=True)
-    with kpi4:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Action Items</div>
-            <div class="metric-value">{len(insight.action_items)}</div>
-            <div class="metric-sub">Sentimen: {insight.overall_sentiment}</div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Action Items</span>
+                <span>🎯</span>
+            </div>
+            <div class="kpi-value">{len(insight.action_items)} Tugas</div>
+            <div class="kpi-desc">Sentimen: {insight.overall_sentiment}</div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Tabs Interface
-    tab_summary, tab_actions, tab_transcript, tab_qa, tab_sentiment = st.tabs([
+    # Tabbed Interface
+    tab_actions, tab_summary, tab_transcript, tab_qa, tab_sentiment = st.tabs([
+        "📋 Action Items",
         "📌 Ringkasan Eksekutif",
-        "✅ Action Items",
-        "🎙️ Transkrip Percakapan",
+        "🎙️ Transkrip Tersinkronisasi",
         "💬 Tanya Rapat (Q&A)",
-        "📊 Analisis Sentimen & Topik"
+        "📊 Sentimen & Analitik"
     ])
 
-    # Tab 1: Summary
+    # TAB 1: Action Items
+    with tab_actions:
+        st.markdown("#### 📋 Daftar Tugas & Tindak Lanjut")
+        st.caption("Action items terdeteksi secara otomatis dari komitmen lisan pembicara.")
+
+        if insight.action_items:
+            # Custom styled HTML Table for Action Items
+            table_rows = []
+            for idx, item in enumerate(insight.action_items, 1):
+                p_badge = "badge-priority-medium"
+                if item.priority.lower() == "high":
+                    p_badge = "badge-priority-high"
+                elif item.priority.lower() == "low":
+                    p_badge = "badge-priority-low"
+
+                table_rows.append(f"""
+                <tr style="border-bottom: 1px solid #e2e8f0; font-size: 0.875rem;">
+                    <td style="padding: 0.75rem 0.5rem; color: #64748b; font-weight: 500;">{idx}</td>
+                    <td style="padding: 0.75rem 0.5rem; color: #0f172a; font-weight: 500;">{item.task}</td>
+                    <td style="padding: 0.75rem 0.5rem;"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; color: #334155;">{item.pic}</span></td>
+                    <td style="padding: 0.75rem 0.5rem; color: #475569;">{item.deadline}</td>
+                    <td style="padding: 0.75rem 0.5rem;"><span class="{p_badge}">{item.priority}</span></td>
+                </tr>
+                """)
+
+            st.markdown(f"""
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e2e8f0; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">
+                        <th style="padding: 0.5rem;">#</th>
+                        <th style="padding: 0.5rem;">Tugas</th>
+                        <th style="padding: 0.5rem;">PIC / Penanggung Jawab</th>
+                        <th style="padding: 0.5rem;">Deadline</th>
+                        <th style="padding: 0.5rem;">Prioritas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {"".join(table_rows)}
+                </tbody>
+            </table>
+            """, unsafe_allow_html=True)
+
+            df = action_items_to_dataframe(insight.action_items)
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Unduh Action Items (.csv)",
+                data=csv,
+                file_name="echomind_action_items.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("Tidak ada action items spesifik yang terdeteksi.")
+
+    # TAB 2: Summary & Decisions
     with tab_summary:
         st.markdown(f"### {insight.title}")
-        st.markdown(insight.executive_summary)
-        
+        st.write(insight.executive_summary)
+
         if insight.decisions_made:
-            st.markdown("#### 🤝 Keputusan Utama yang Disepakati")
+            st.markdown("#### 🤝 Kesepakatan Utama")
             for dec in insight.decisions_made:
                 st.markdown(f"- **{dec}**")
 
-        st.divider()
+        st.markdown("---")
         report_md = export_report_markdown(res, insight)
         st.download_button(
-            label="📥 Unduh Laporan Lengkap (.md)",
+            label="📥 Unduh Laporan Eksekutif (.md)",
             data=report_md,
             file_name="laporan_rapat_echomind.md",
             mime="text/markdown"
         )
 
-    # Tab 2: Action Items
-    with tab_actions:
-        st.markdown("### 📋 Daftar Tugas & Tindak Lanjut")
-        if insight.action_items:
-            df = action_items_to_dataframe(insight.action_items)
-            st.dataframe(df, use_container_width=True)
-
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Unduh Action Items (.csv)",
-                data=csv,
-                file_name="action_items.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("Tidak ada action item spesifik yang terdeteksi.")
-
-    # Tab 3: Transcript Viewer
+    # TAB 3: Synchronized Transcript Viewer
     with tab_transcript:
-        st.markdown("### 📜 Transkrip Tersinkronisasi")
+        st.markdown("#### 📜 Transkrip Tersinkronisasi")
+        st.caption("Klik segmen untuk membaca dialog per penutur.")
+
         for seg in res.segments:
-            speaker_class = "speaker-1" if "1" in seg.speaker else ("speaker-2" if "2" in seg.speaker else "speaker-3")
+            speaker_cls = "speaker-1" if "1" in seg.speaker else ("speaker-2" if "2" in seg.speaker else "speaker-3")
             start_fmt = format_timestamp(seg.start)
             end_fmt = format_timestamp(seg.end)
-            
+
             st.markdown(f"""
-            <div class="transcript-box">
-                <span class="speaker-pill {speaker_class}">{seg.speaker}</span>
-                <span class="timestamp-tag">{start_fmt} - {end_fmt}</span>
-                <div style="margin-top: 0.35rem; color: #1e293b; font-size: 0.9375rem;">
-                    {seg.text}
+            <div class="transcript-item">
+                <div class="transcript-meta">
+                    <span class="speaker-pill {speaker_cls}">{seg.speaker}</span>
+                    <span class="timestamp-pill">{start_fmt} - {end_fmt}</span>
                 </div>
+                <div class="transcript-text">{seg.text}</div>
             </div>
             """, unsafe_allow_html=True)
 
-    # Tab 4: Interactive Q&A
+    # TAB 4: Q&A Chat
     with tab_qa:
-        st.markdown("### 💬 Tanya Jawab Mengenai Rapat Ini")
-        st.caption("Ajukan pertanyaan bebas tentang keputusan, siapa yang ditugaskan, atau poin spesifik.")
+        st.markdown("#### 💬 Asisten Tanya Jawab Rapat")
+        st.caption("Ajukan pertanyaan apa pun seputar apa yang dibicarakan dalam rekaman.")
 
         for q, a in st.session_state.chat_history:
             with st.chat_message("user"):
@@ -354,33 +617,38 @@ if st.session_state.transcript_result and st.session_state.meeting_insight:
             with st.chat_message("assistant"):
                 st.write(a)
 
-        user_query = st.chat_input("Contoh: Apa tugas yang diberikan kepada Sarah?")
+        user_query = st.chat_input("Tanyakan sesuatu, misal: Apa deadline untuk Sarah?")
         if user_query:
             with st.chat_message("user"):
                 st.write(user_query)
-            
+
             analyzer = MeetingAnalyzer(api_key=api_key_input)
-            with st.spinner("Mencari jawaban dari rekaman..."):
+            with st.spinner("Mencari jawaban di transkrip..."):
                 answer = analyzer.answer_question(res.full_text, user_query)
-            
+
             with st.chat_message("assistant"):
                 st.write(answer)
             st.session_state.chat_history.append((user_query, answer))
 
-    # Tab 5: Sentiment & Topics
+    # TAB 5: Sentiment & Topics
     with tab_sentiment:
-        st.markdown("### 📊 Analisis Nada & Topik Pertemuan")
-        col_s1, col_s2 = st.columns(2)
-        with col_s1:
-            st.markdown("#### Topik Utama")
+        st.markdown("#### 📊 Analisis Sentimen & Topik Pembahasan")
+        col_t1, col_t2 = st.columns(2)
+
+        with col_t1:
+            st.markdown("##### 📌 Topik Utama")
             for t in insight.key_topics:
                 st.markdown(f"- {t}")
 
-        with col_s2:
-            st.markdown("#### Indikator Emosi & Suasana")
-            st.metric("Skor Sentimen Keseluruhan", f"{insight.sentiment_score:+0.2f}", insight.overall_sentiment)
-            
+        with col_t2:
+            st.markdown("##### 🎭 Indikator Sentimen")
+            st.metric(
+                label="Skor Sentimen Rapat",
+                value=f"{insight.sentiment_score:+0.2f}",
+                delta=insight.overall_sentiment
+            )
+
             if insight.key_moments:
-                st.markdown("##### Momen Kunci")
-                for m in insight.key_moments:
-                    st.markdown(f"⏱️ `{m.timestamp}`: **{m.tone}** — *\"{m.quote}\"*")
+                st.markdown("##### 🔍 Momen Kunci")
+                for km in insight.key_moments:
+                    st.markdown(f"⏱️ `{km.timestamp}`: **{km.tone}** — *\"{km.quote}\"*")

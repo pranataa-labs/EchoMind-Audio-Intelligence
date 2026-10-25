@@ -20,7 +20,7 @@ import av
 class AudioProcessor:
     """Handles audio inspection, conversion, and persistent temporary storage."""
 
-    SUPPORTED_FORMATS = [".mp3", ".wav", ".m4a", ".ogg", ".flac", ".aac", ".wma"]
+    SUPPORTED_FORMATS = [".mp3", ".wav", ".m4a", ".ogg", ".flac", ".aac", ".wma", ".opus"]
 
     @staticmethod
     def get_audio_info(file_path: str) -> Dict[str, Any]:
@@ -34,7 +34,7 @@ class AudioProcessor:
             "size_mb": round(file_size / (1024 * 1024), 2),
         }
 
-        # 1. Try PyAV (works for MP3, M4A, OGG, WAV, etc.)
+        # 1. Try PyAV (works for MP3, M4A, OGG/Opus, WAV, etc.)
         try:
             with av.open(file_path) as container:
                 audio_streams = [s for s in container.streams if s.type == "audio"]
@@ -63,12 +63,32 @@ class AudioProcessor:
         return info
 
     @staticmethod
-    def save_upload_to_temp(uploaded_file, file_signature: str, suffix: str = ".wav") -> str:
-        """Save a streamlit uploaded file buffer deterministically to avoid redundant writes."""
+    def save_upload_to_temp(uploaded_file, *args, **kwargs) -> str:
+        """Save a streamlit uploaded file buffer deterministically to avoid redundant writes.
+        Accepts any combination of positional or keyword arguments defensively.
+        """
+        file_signature = kwargs.get("file_signature", "")
+        suffix = kwargs.get("suffix", "")
+
+        if args:
+            if len(args) == 1:
+                arg0 = str(args[0])
+                if arg0.startswith("."):
+                    suffix = arg0
+                else:
+                    file_signature = arg0
+            elif len(args) >= 2:
+                file_signature = str(args[0])
+                suffix = str(args[1])
+
+        if not suffix:
+            suffix = Path(getattr(uploaded_file, "name", "audio.wav")).suffix or ".wav"
+        if not file_signature:
+            file_signature = f"{getattr(uploaded_file, 'name', 'audio')}_{getattr(uploaded_file, 'size', 0)}"
+
         temp_dir = Path(tempfile.gettempdir()) / "echomind_uploads"
         temp_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Deterministic filename based on hash of signature
+
         hash_name = hashlib.md5(file_signature.encode('utf-8')).hexdigest()[:12]
         file_path = temp_dir / f"upload_{hash_name}{suffix}"
 

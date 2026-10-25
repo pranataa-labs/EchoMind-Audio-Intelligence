@@ -1,5 +1,6 @@
 """EchoMind - End-to-End Meeting & Audio Intelligence Platform.
 Designed with Pranataa's Shadcn-Admin Design System (Slate palette, Inter, 0.625rem radius).
+Fully adaptive for both Light and Dark modes.
 """
 
 import os
@@ -21,49 +22,52 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom Styling (Shadcn-Admin Slate Design System)
+# Custom Styling (Shadcn-Admin Slate Design System - Dark & Light Adaptive)
 SHADCN_SLATE_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --background: #ffffff;
-    --foreground: #020817;
-    --card: #ffffff;
-    --card-foreground: #020817;
-    --popover: #ffffff;
-    --popover-foreground: #020817;
-    --primary: #0f172a;
-    --primary-foreground: #f8fafc;
-    --secondary: #f1f5f9;
-    --secondary-foreground: #0f172a;
-    --muted: #f8fafc;
-    --muted-foreground: #64748b;
-    --accent: #f1f5f9;
-    --accent-foreground: #0f172a;
-    --destructive: #ef4444;
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    --ring: #94a3b8;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-border: #e2e8f0;
+    --text-title: #0f172a;
+    --text-body: #1e293b;
+    --text-muted: #64748b;
+    --pill-bg: #f1f5f9;
+    --pill-text: #0f172a;
+    --pill-border: #cbd5e1;
     --radius: 0.625rem;
 }
 
-html, body, [class*="css"] {
+/* Dark Mode detection via media query & Streamlit theme */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --card-bg: #0b1120;
+        --card-border: #1e293b;
+        --text-title: #f8fafc;
+        --text-body: #e2e8f0;
+        --text-muted: #94a3b8;
+        --pill-bg: #1e293b;
+        --pill-text: #f8fafc;
+        --pill-border: #334155;
+    }
+}
+
+html, body, [class*="css"], [data-testid="stAppViewContainer"] {
     font-family: var(--font-sans) !important;
-    color: #0f172a;
 }
 
 /* Header styling */
 .header-wrapper {
     padding-bottom: 1.25rem;
     margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--card-border);
 }
 .header-breadcrumb {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--muted-foreground);
+    color: var(--text-muted);
     margin-bottom: 0.35rem;
     display: flex;
     align-items: center;
@@ -73,13 +77,13 @@ html, body, [class*="css"] {
     font-size: 1.75rem;
     font-weight: 700;
     letter-spacing: -0.025em;
-    color: #0f172a;
+    color: var(--text-title);
     margin: 0;
     line-height: 1.2;
 }
 .header-subtitle {
     font-size: 0.875rem;
-    color: var(--muted-foreground);
+    color: var(--text-muted);
     margin-top: 0.25rem;
 }
 
@@ -102,15 +106,15 @@ html, body, [class*="css"] {
 }
 
 .kpi-card {
-    background: #ffffff;
-    border: 1px solid var(--border);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius);
     padding: 1.25rem 1.25rem 1rem 1.25rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     transition: border-color 0.15s ease;
 }
 .kpi-card:hover {
-    border-color: #cbd5e1;
+    border-color: #94a3b8;
 }
 .kpi-header {
     display: flex;
@@ -123,30 +127,28 @@ html, body, [class*="css"] {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--muted-foreground);
+    color: var(--text-muted);
 }
 .kpi-icon {
-    color: #94a3b8;
-    width: 1rem;
-    height: 1rem;
+    font-size: 1.1rem;
 }
 .kpi-value {
     font-size: 1.625rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: #0f172a;
+    color: var(--text-title);
     line-height: 1.2;
 }
 .kpi-desc {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-muted);
     margin-top: 0.35rem;
 }
 
 /* Audio Preview Box */
 .audio-card {
-    background: #f8fafc;
-    border: 1px solid var(--border);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     margin-bottom: 1.25rem;
@@ -159,25 +161,22 @@ html, body, [class*="css"] {
     align-items: center;
     gap: 1.5rem;
     font-size: 0.8125rem;
-    color: var(--muted-foreground);
+    color: var(--text-muted);
     flex-wrap: wrap;
 }
 .audio-meta-item strong {
-    color: #1e293b;
+    color: var(--text-title);
     font-weight: 600;
 }
 
 /* Transcript Dialog Rows */
 .transcript-item {
-    background: #ffffff;
-    border: 1px solid var(--border);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     margin-bottom: 0.625rem;
     transition: background-color 0.1s ease;
-}
-.transcript-item:hover {
-    background-color: #f8fafc;
 }
 .transcript-meta {
     display: flex;
@@ -195,40 +194,40 @@ html, body, [class*="css"] {
     letter-spacing: 0.02em;
 }
 .speaker-1 {
-    background: #f1f5f9;
-    color: #0f172a;
-    border: 1px solid #cbd5e1;
+    background: var(--pill-bg);
+    color: var(--pill-text);
+    border: 1px solid var(--pill-border);
 }
 .speaker-2 {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #bfdbfe;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
 }
 .speaker-3 {
-    background: #f0fdf4;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 .timestamp-pill {
     font-size: 0.75rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    color: #64748b;
-    background: #f1f5f9;
+    color: var(--text-muted);
+    background: var(--pill-bg);
     padding: 0.15rem 0.5rem;
     border-radius: 0.375rem;
 }
 .transcript-text {
     font-size: 0.9375rem;
-    line-height: 1.55;
-    color: #1e293b;
+    line-height: 1.6;
+    color: var(--text-body);
 }
 
 /* Priority Badges (Outline Badge + Subtle Tint) */
 .badge-priority-high {
     display: inline-block;
-    background: rgba(244, 63, 94, 0.08);
-    color: #be123c;
-    border: 1px solid rgba(244, 63, 94, 0.25);
+    background: rgba(244, 63, 94, 0.12);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
     border-radius: 0.375rem;
     padding: 0.125rem 0.5rem;
     font-size: 0.75rem;
@@ -236,9 +235,9 @@ html, body, [class*="css"] {
 }
 .badge-priority-medium {
     display: inline-block;
-    background: rgba(245, 158, 11, 0.08);
-    color: #b45309;
-    border: 1px solid rgba(245, 158, 11, 0.25);
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
     border-radius: 0.375rem;
     padding: 0.125rem 0.5rem;
     font-size: 0.75rem;
@@ -246,9 +245,9 @@ html, body, [class*="css"] {
 }
 .badge-priority-low {
     display: inline-block;
-    background: rgba(16, 185, 129, 0.08);
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
     border-radius: 0.375rem;
     padding: 0.125rem 0.5rem;
     font-size: 0.75rem;
@@ -262,26 +261,23 @@ div.stButton > button {
     font-size: 0.875rem !important;
     transition: all 0.15s ease !important;
 }
-div.stButton > button:hover {
-    border-color: #94a3b8 !important;
-}
 
 /* Tab Headers */
 .stTabs [data-baseweb="tab-list"] {
     gap: 0.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--card-border);
 }
 .stTabs [data-baseweb="tab"] {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--muted-foreground);
+    color: var(--text-muted);
     padding: 0.5rem 0.875rem;
     border-radius: 0.375rem 0.375rem 0 0;
 }
 .stTabs [aria-selected="true"] {
-    color: #0f172a !important;
+    color: var(--text-title) !important;
     font-weight: 600 !important;
-    border-bottom: 2px solid #0f172a !important;
+    border-bottom: 2px solid #3b82f6 !important;
 }
 </style>
 """
@@ -350,13 +346,11 @@ st.markdown("""
         <span>/</span>
         <span>machine-learning</span>
         <span>/</span>
-        <span style="color: #0f172a; font-weight: 600;">echomind</span>
+        <span style="font-weight: 600;">echomind</span>
     </div>
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-        <div>
-            <h1 class="header-title">EchoMind Audio Intelligence</h1>
-            <p class="header-subtitle">Transkripsi percakapan super cepat, deteksi pembicara, dan ekstraksi action items otomatis.</p>
-        </div>
+    <div>
+        <h1 class="header-title">EchoMind Audio Intelligence</h1>
+        <p class="header-subtitle">Transkripsi percakapan super cepat, deteksi pembicara, dan ekstraksi action items otomatis.</p>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -389,7 +383,11 @@ if uploaded_file is not None:
     file_sig = f"{uploaded_file.name}_{uploaded_file.size}"
     if st.session_state.current_file_signature != file_sig:
         suffix = Path(uploaded_file.name).suffix or ".wav"
-        temp_path = AudioProcessor.save_upload_to_temp(uploaded_file, file_sig, suffix=suffix)
+        temp_path = AudioProcessor.save_upload_to_temp(
+            uploaded_file,
+            file_signature=file_sig,
+            suffix=suffix
+        )
         st.session_state.audio_path = temp_path
         st.session_state.current_file_signature = file_sig
         st.session_state.audio_info = AudioProcessor.get_audio_info(temp_path)
@@ -402,12 +400,13 @@ if uploaded_file is not None:
 if st.session_state.audio_path and os.path.exists(st.session_state.audio_path):
     info = st.session_state.audio_info or AudioProcessor.get_audio_info(st.session_state.audio_path)
     file_name = Path(st.session_state.audio_path).name
+    dur_label = f"{format_timestamp(info.get('duration', 0.0))} ({info.get('duration', 0.0)}s)" if info.get('duration', 0.0) > 0 else "Dihitung saat proses"
 
     st.markdown(f"""
     <div class="audio-card">
         <div class="audio-meta-row">
             <span class="audio-meta-item">📁 File: <strong>{file_name}</strong></span>
-            <span class="audio-meta-item">⏱️ Durasi: <strong>{format_timestamp(info.get('duration', 0.0))}</strong> ({info.get('duration', 0.0)}s)</span>
+            <span class="audio-meta-item">⏱️ Durasi: <strong>{dur_label}</strong></span>
             <span class="audio-meta-item">📦 Ukuran: <strong>{info.get('size_mb', 0.0)} MB</strong></span>
             <span class="audio-meta-item">🔊 Sample Rate: <strong>{info.get('sample_rate', 16000)} Hz</strong></span>
         </div>
@@ -418,7 +417,7 @@ if st.session_state.audio_path and os.path.exists(st.session_state.audio_path):
     st.audio(st.session_state.audio_path)
 
     # Trigger Process Button
-    btn_col1, btn_col2 = st.columns([1.5, 3])
+    btn_col1, btn_col2 = st.columns([1.8, 3])
     with btn_col1:
         start_process = st.button("⚡ Proses Transkripsi & Analisis", type="primary", use_container_width=True)
 
@@ -473,15 +472,15 @@ if st.session_state.transcript_result and st.session_state.meeting_insight:
         <div class="kpi-card">
             <div class="kpi-header">
                 <span class="kpi-title">Durasi Rekaman</span>
-                <span>⏱️</span>
+                <span class="kpi-icon">⏱️</span>
             </div>
             <div class="kpi-value">{format_timestamp(res.duration_seconds)}</div>
-            <div class="kpi-desc">{res.duration_seconds:.1f} detik waktu percakapan</div>
+            <div class="kpi-desc">{res.duration_seconds:.1f} detik percakapan</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-header">
                 <span class="kpi-title">Total Kata</span>
-                <span>📝</span>
+                <span class="kpi-icon">📝</span>
             </div>
             <div class="kpi-value">{total_words}</div>
             <div class="kpi-desc">{len(res.segments)} giliran bicara terdeteksi</div>
@@ -489,7 +488,7 @@ if st.session_state.transcript_result and st.session_state.meeting_insight:
         <div class="kpi-card">
             <div class="kpi-header">
                 <span class="kpi-title">Bahasa Utama</span>
-                <span>🌐</span>
+                <span class="kpi-icon">🌐</span>
             </div>
             <div class="kpi-value">{res.language.upper()}</div>
             <div class="kpi-desc">Confidence score: {res.language_probability:.0%}</div>
@@ -497,7 +496,7 @@ if st.session_state.transcript_result and st.session_state.meeting_insight:
         <div class="kpi-card">
             <div class="kpi-header">
                 <span class="kpi-title">Action Items</span>
-                <span>🎯</span>
+                <span class="kpi-icon">🎯</span>
             </div>
             <div class="kpi-value">{len(insight.action_items)} Tugas</div>
             <div class="kpi-desc">Sentimen: {insight.overall_sentiment}</div>
@@ -520,7 +519,6 @@ if st.session_state.transcript_result and st.session_state.meeting_insight:
         st.caption("Action items terdeteksi secara otomatis dari komitmen lisan pembicara.")
 
         if insight.action_items:
-            # Custom styled HTML Table for Action Items
             table_rows = []
             for idx, item in enumerate(insight.action_items, 1):
                 p_badge = "badge-priority-medium"
@@ -530,11 +528,11 @@ if st.session_state.transcript_result and st.session_state.meeting_insight:
                     p_badge = "badge-priority-low"
 
                 table_rows.append(f"""
-                <tr style="border-bottom: 1px solid #e2e8f0; font-size: 0.875rem;">
-                    <td style="padding: 0.75rem 0.5rem; color: #64748b; font-weight: 500;">{idx}</td>
-                    <td style="padding: 0.75rem 0.5rem; color: #0f172a; font-weight: 500;">{item.task}</td>
-                    <td style="padding: 0.75rem 0.5rem;"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; color: #334155;">{item.pic}</span></td>
-                    <td style="padding: 0.75rem 0.5rem; color: #475569;">{item.deadline}</td>
+                <tr style="border-bottom: 1px solid var(--card-border); font-size: 0.875rem;">
+                    <td style="padding: 0.75rem 0.5rem; color: var(--text-muted); font-weight: 500;">{idx}</td>
+                    <td style="padding: 0.75rem 0.5rem; color: var(--text-title); font-weight: 500;">{item.task}</td>
+                    <td style="padding: 0.75rem 0.5rem;"><span style="background: var(--pill-bg); border: 1px solid var(--pill-border); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; color: var(--text-body);">{item.pic}</span></td>
+                    <td style="padding: 0.75rem 0.5rem; color: var(--text-muted);">{item.deadline}</td>
                     <td style="padding: 0.75rem 0.5rem;"><span class="{p_badge}">{item.priority}</span></td>
                 </tr>
                 """)
@@ -542,7 +540,7 @@ if st.session_state.transcript_result and st.session_state.meeting_insight:
             st.markdown(f"""
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem; text-align: left;">
                 <thead>
-                    <tr style="border-bottom: 2px solid #e2e8f0; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">
+                    <tr style="border-bottom: 2px solid var(--card-border); font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">
                         <th style="padding: 0.5rem;">#</th>
                         <th style="padding: 0.5rem;">Tugas</th>
                         <th style="padding: 0.5rem;">PIC / Penanggung Jawab</th>

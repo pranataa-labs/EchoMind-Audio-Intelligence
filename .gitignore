@@ -1,0 +1,22 @@
+# Virtual Environment
+.venv/
+env/
+venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Model Checkpoints & Temporary files
+*.tmp
+*.temp
+data/
+.cache/
+
+# Environment Variables
+.env
+
+# Streamlit
+.streamlit/

@@ -1,5 +1,7 @@
 # 🎙️ EchoMind — Meeting & Audio Intelligence Platform
 
+[`python`](https://github.com/topics/python) • [`faster-whisper`](https://github.com/topics/faster-whisper) • [`gemini-api`](https://github.com/topics/gemini-api) • [`streamlit`](https://github.com/topics/streamlit) • [`audio-intelligence`](https://github.com/topics/audio-intelligence) • [`speech-to-text`](https://github.com/topics/speech-to-text) • [`meeting-summarizer`](https://github.com/topics/meeting-summarizer) • [`cpu-inference`](https://github.com/topics/cpu-inference)
+
 **EchoMind** adalah platform analitik audio dan rapat modern end-to-end yang menggabungkan transkripsi ucapan super cepat (*Speech-to-Text*) dengan penalaran kecerdasan multimodal (*Multimodal Intelligence*).
 
 Proyek ini dibangun untuk mendeteksi pembicara, mentranskripsikan ucapan secara real-time, mengekstraksi **Action Items** (tugas, penanggung jawab, tenggat waktu), meringkas hasil rapat, menganalisis dinamika sentimen, dan menyediakan asisten interaktif untuk tanya jawab seputar isi rekaman.

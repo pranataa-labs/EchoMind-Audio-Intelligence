@@ -8,6 +8,14 @@ Proyek ini dibangun untuk mendeteksi pembicara, mentranskripsikan ucapan secara 
 
 ---
 
+## Tangkapan Layar Aplikasi
+
+<p align="center">
+  <img src="screenshots/echomind-dashboard.png" alt="EchoMind Audio Intelligence Dashboard" width="920">
+</p>
+
+---
+
 ## 🌟 Fitur Utama
 
 - **🚀 High-Speed Speech-to-Text (STT):** Didukung oleh `faster-whisper` dengan arsitektur CTranslate2 dan kuantisasi `int8`, berjalan sangat cepat dan hemat daya langsung di CPU (optimal untuk laptop/PC tanpa GPU diskrit).
